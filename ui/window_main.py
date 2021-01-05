@@ -1,15 +1,22 @@
 import tkinter as tk
 import re
 import tkinter.messagebox
+
 from tkinter import ttk
+from trend.trend import Trend
+from PIL.ImageTk import PhotoImage
+
 from utils.config import Config
+from utils.non_image import NoneImage
 
 
-class WindowSetting(tk.Tk):
+class WindowMain(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.__config = Config()
         self.__URL_list = self.__config.get()
+        self.__trend_ob = None
+        self.__none_img = PhotoImage(image=NoneImage().get_none_img())
         # 弹窗界面
         self.__setup_ui()
         self.__init_text()
@@ -23,10 +30,10 @@ class WindowSetting(tk.Tk):
         add_button.grid(row=0, column=0)
         delete_button = tk.Button(edit_group, text="-", command=self.__delete)
         delete_button.grid(row=1, column=0)
-        self.__URL_entry = tk.Entry(edit_group, width=58)
+        self.__URL_entry = tk.Entry(edit_group, width=61)
         self.__URL_entry.grid(row=0, column=1, columnspan=3)
         self.__alternative_box = tk.Listbox(edit_group,
-                                            width=26,
+                                            width=27,
                                             selectmode=tk.EXTENDED)
         self.__alternative_box.grid(row=1, column=1)
         in_out_frame = tk.Frame(edit_group)
@@ -40,7 +47,7 @@ class WindowSetting(tk.Tk):
         withdraw_button.grid(row=1, column=0, pady=5)
         in_out_frame.grid(row=1, column=2)
         self.__select_box = tk.Listbox(edit_group,
-                                       width=26,
+                                       width=28,
                                        selectmode=tk.EXTENDED)
         self.__select_box.grid(row=1, column=3)
         edit_group.grid(row=0, column=0)
@@ -52,10 +59,23 @@ class WindowSetting(tk.Tk):
         # 显示Frame
         view_frame = ttk.Notebook(self)
         view_frame.grid(row=3, column=0)
-        img_frame = tk.Frame(view_frame)
+        cloud_img_frame = tk.Frame(view_frame)
+        top_img_frame = tk.Frame(view_frame)
 
-        view_frame.add(img_frame, text='词云图')
-        # view_frame.add(, text='词频分析')
+        cloud_img_frame.grid_rowconfigure(0, weight=1)
+        cloud_img_frame.grid_columnconfigure(0, weight=1)
+        top_img_frame.grid_rowconfigure(0, weight=1)
+        top_img_frame.grid_columnconfigure(0, weight=1)
+
+        self.__cloud_img_label = tk.Label(cloud_img_frame,
+                                          image=self.__none_img)
+        self.__cloud_img_label.grid(row=0, column=0, sticky=tk.NSEW)
+        self.__top_img_label = tk.Label(top_img_frame, image=self.__none_img)
+        self.__top_img_label.grid(row=0, column=0, sticky=tk.NSEW)
+
+        view_frame.add(cloud_img_frame, text='词云图')
+        view_frame.add(top_img_frame, text='词频分析')
+        view_frame.grid(row=2, column=0, sticky=tk.NSEW)
 
     def __init_text(self) -> None:
         for item in self.__URL_list['URLs']['list']:
@@ -87,7 +107,19 @@ class WindowSetting(tk.Tk):
         self.__config.update(self.__URL_list)
 
     def __analyse(self):
-        pass
+        if self.__select_box.size() == 0:
+            return
+        self.__fresh()
+
+    def __fresh(self):
+        URLs = self.__select_box.get(0, self.__select_box.size())
+        self.__trend_ob = Trend(URLs)
+        cloud_image, top_image = self.__trend_ob.get_img()
+
+        self.__cloud_image = PhotoImage(cloud_image)
+        self.__cloud_img_label.configure(image=self.__cloud_image)
+        self.__top_image = PhotoImage(top_image)
+        self.__top_img_label.configure(image=self.__top_image)
 
     def __insert(self):
         insert_tmp = self.__alternative_box.curselection()

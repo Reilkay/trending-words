@@ -1,3 +1,3 @@
-from ui.window_main import WindowSetting
+from ui.window_main import WindowMain
 
-WindowSetting().mainloop()
+WindowMain().mainloop()
